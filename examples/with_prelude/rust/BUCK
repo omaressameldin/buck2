@@ -1,4 +1,6 @@
+
 load("//:test_utils.bzl", "assert_output")
+load("defs.bzl", "rule_with_custom_span")
 
 oncall("build_infra")
 
@@ -7,6 +9,14 @@ rust_library(
     srcs = glob(
         ["src/**/*.rs"],
     ),
+)
+
+rust_binary(
+    name = "long_build_library",
+    srcs = glob(
+        ["long_running_binary/**/*.rs"],
+    ),
+    crate_root = "long_running_binary/main.rs",
 )
 
 rust_binary(
@@ -30,4 +40,9 @@ assert_output(
     name = "check_main",
     command = "$(exe_target :main)",
     output = "hello world from rust toolchain",
+)
+
+rule_with_custom_span(
+    name = "target_with_custom_span",
+    target = ":long_build_library",
 )
