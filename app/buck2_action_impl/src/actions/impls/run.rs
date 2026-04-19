@@ -258,6 +258,7 @@ pub(crate) struct UnregisteredRunAction {
     pub(crate) meta_internal_extra_params: Arc<MetaInternalExtraParams>,
     pub(crate) expected_eligible_for_dedupe: Option<bool>,
     pub(crate) timeout: Option<Duration>,
+    pub(crate) allow_custom_span: Option<bool>,
 }
 
 impl UnregisteredAction for UnregisteredRunAction {
@@ -1211,6 +1212,7 @@ impl RunAction {
             .with_unique_input_inodes(self.inner.unique_input_inodes)
             .with_remote_execution_dependencies(self.inner.remote_execution_dependencies.to_vec())
             .with_re_gang_workers(self.inner.re_gang_workers.to_vec())
+            .with_allow_custom_span(self.inner.allow_custom_span)
             .with_remote_execution_custom_image(
                 self.inner.remote_execution_custom_image.clone().map(|s| *s),
             )

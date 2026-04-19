@@ -233,6 +233,13 @@ impl LocalExecutor {
                         .while_alive()
                         .map(|()| Ok(GatherOutputStatus::Cancelled));
 
+                    let mut should_look_for_spans = false;
+                    for (key, _value) in cmd.get_envs() {
+                        if key == buck2_data::BUCK2_SPAN_EVENT_IDENTIFIER {
+                            should_look_for_spans = true;
+                            break;
+                        }
+                    }
                     let stream = spawn_command_and_stream_events(
                         cmd,
                         timeout,
@@ -245,7 +252,7 @@ impl LocalExecutor {
                         freeze_rx,
                     )
                     .await?;
-                    decode_command_event_stream(stream).await
+                    decode_command_event_stream(stream, should_look_for_spans).await
                 }
                 .with_buck_error_context(|| format!("Failed to gather output from command: {exe}")),
             }?;

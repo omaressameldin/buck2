@@ -296,6 +296,9 @@ pub(crate) fn analysis_actions_methods_run(methods: &mut MethodsBuilder) {
         #[starlark(require = named, default = NoneOr::None)] expect_eligible_for_dedupe: NoneOr<
             bool,
         >,
+        #[starlark(require = named, default = NoneOr::None)] allow_custom_span: NoneOr<
+            bool,
+        >,
     ) -> starlark::Result<NoneType> {
         if incremental_remote_outputs && !no_outputs_cleanup {
             // Precaution to make sure content-based paths are not involved.
@@ -613,6 +616,7 @@ pub(crate) fn analysis_actions_methods_run(methods: &mut MethodsBuilder) {
             meta_internal_extra_params: extra_params,
             expected_eligible_for_dedupe: expect_eligible_for_dedupe.into_option(),
             timeout,
+            allow_custom_span: allow_custom_span.into_option(),
         };
 
         let expect_eligible_for_dedupe = expect_eligible_for_dedupe.into_option().unwrap_or(false);

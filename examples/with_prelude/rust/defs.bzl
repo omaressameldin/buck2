@@ -4,6 +4,7 @@ def _rule_with_custom_span(ctx: AnalysisContext) -> list[Provider]:
     ctx.actions.run(
         cmd_args(target[RunInfo], cmd_args(output.as_output())),
         category = "target_run_with_custom_span",
+        allow_custom_span = True,
     )
     return [
         DefaultInfo(output),
@@ -35,6 +36,7 @@ def _rule_without_custom_span(ctx: AnalysisContext) -> list[Provider]:
     ctx.actions.run(
         cmd_args(target[RunInfo], cmd_args(output.as_output())),
         category = "target_run_with_custom_span",
+        allow_custom_span = False,
     )
     return [
         DefaultInfo(output),

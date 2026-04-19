@@ -407,6 +407,8 @@ pub struct CommandExecutionRequest {
     skip_resource_control: bool,
 
     network_access: Option<NetworkAccess>,
+
+    allow_custom_span: bool,
 }
 
 impl CommandExecutionRequest {
@@ -445,6 +447,7 @@ impl CommandExecutionRequest {
             is_test: false,
             skip_resource_control: false,
             network_access: None,
+            allow_custom_span: false,
         }
     }
 
@@ -598,6 +601,22 @@ impl CommandExecutionRequest {
         local_environment_inheritance: EnvironmentInheritance,
     ) -> Self {
         self.local_environment_inheritance = Some(local_environment_inheritance);
+        self
+    }
+
+    pub fn with_allow_custom_span(
+        mut self,
+        allow_custom_span: Option<bool>,
+    ) -> Self {
+        if let Some(allow_custom_span) = allow_custom_span {
+            self.allow_custom_span = allow_custom_span;
+            if self.allow_custom_span {
+                self.env.insert(buck2_data::BUCK2_SPAN_EVENT_IDENTIFIER.to_owned(), buck2_data::CUSTOM_SPAN_PREFIX.to_owned());
+            }
+        } else {
+            self.allow_custom_span = false;
+        }
+
         self
     }
 

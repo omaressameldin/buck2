@@ -116,7 +116,7 @@ impl ForkserverClient {
         });
 
         let stream = stream::once(future::ready(buck2_forkserver_proto::RequestEvent {
-            data: Some(req.into()),
+            data: Some(req.clone().into()),
         }))
         .chain(futures::stream::select(cancel_stream, freeze_stream));
 
@@ -129,8 +129,20 @@ impl ForkserverClient {
             .buck_error_context("Error dispatching command to Forkserver")?
             .into_inner();
         let stream = decode_event_stream(stream);
-
-        decode_command_event_stream(stream).await
+        let mut should_look_for_spans = false;
+        for x in req.env.iter() {
+            if let Some(d) = &x.data {
+                if let Some(env) = d.clone().into_set() {
+                    if let Ok(key) = String::from_utf8(env.key.clone()) {
+                        if key == buck2_data::BUCK2_SPAN_EVENT_IDENTIFIER {
+                            should_look_for_spans = true;
+                            break;
+                        }
+                    }
+                } 
+            }
+        }
+        decode_command_event_stream(stream, should_look_for_spans).await
     }
 
     pub async fn set_log_filter(&self, log_filter: String) -> buck2_error::Result<()> {

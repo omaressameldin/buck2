@@ -15,6 +15,9 @@ use std::fmt;
 
 pub mod action_key_owner;
 
+pub const CUSTOM_SPAN_PREFIX : &str = "@@BUCK2_SPAN_START:";
+pub const BUCK2_SPAN_EVENT_IDENTIFIER : &str = "BUCK2_SPAN_EVENT_IDENTIFIER";
+
 pub mod serialize_timestamp {
     use serde::Deserialize;
     use serde::Deserializer;

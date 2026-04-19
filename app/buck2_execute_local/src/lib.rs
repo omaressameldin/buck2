@@ -348,7 +348,7 @@ pub struct CommandResult {
     pub orphan_processes: Vec<OrphanProcessInfo>,
 }
 
-pub async fn decode_command_event_stream<S>(stream: S) -> buck2_error::Result<CommandResult>
+pub async fn decode_command_event_stream<S>(stream: S, should_look_for_spans: bool) -> buck2_error::Result<CommandResult>
 where
     S: Stream<Item = buck2_error::Result<CommandEvent>>,
 {
@@ -359,8 +359,32 @@ where
 
     while let Some(event) = stream.try_next().await? {
         match event {
-            CommandEvent::Stdout(bytes) => stdout.extend(&bytes),
-            CommandEvent::Stderr(bytes) => stderr.extend(&bytes),
+            CommandEvent::Stdout(bytes) => {
+                let line = std::str::from_utf8(&bytes).unwrap_or_default().trim();
+                if should_look_for_spans {
+                    if let Some(message) = line.strip_prefix(buck2_data::CUSTOM_SPAN_PREFIX) {
+                        buck2_events::dispatch::instant_event(
+                            buck2_data::ConsoleMessage {
+                                message: message.to_string(),
+                            },
+                        );
+                    }
+                }
+                stdout.extend(&bytes)
+            },
+            CommandEvent::Stderr(bytes) => {
+                let line = std::str::from_utf8(&bytes).unwrap_or_default().trim();
+                if should_look_for_spans {
+                    if let Some(message) = line.strip_prefix(buck2_data::CUSTOM_SPAN_PREFIX) {
+                        buck2_events::dispatch::instant_event(
+                            buck2_data::ConsoleMessage {
+                                message: message.to_string(),
+                            },
+                        );
+                    }
+                }
+                stderr.extend(&bytes)
+            },
             CommandEvent::Exit(exit, orphan_processes) => {
                 return Ok(CommandResult {
                     status: exit,
@@ -511,7 +535,7 @@ mod tests {
             futures::stream::pending(),
         )
         .await?;
-        decode_command_event_stream(stream).await
+        decode_command_event_stream(stream, false).await
     }
 
     #[tokio::test]
@@ -812,7 +836,7 @@ mod tests {
         )
         .await?;
 
-        let CommandResult { status, .. } = decode_command_event_stream(stream).await?;
+        let CommandResult { status, .. } = decode_command_event_stream(stream, false).await?;
         assert!(matches!(status, GatherOutputStatus::TimedOut(..)));
 
         assert!(*killed.lock().unwrap());
