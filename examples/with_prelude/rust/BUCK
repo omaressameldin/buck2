@@ -1,6 +1,6 @@
 
 load("//:test_utils.bzl", "assert_output")
-load("defs.bzl", "rule_with_custom_span")
+load("defs.bzl", "rule_with_custom_span", "rule_without_custom_span")
 
 oncall("build_infra")
 
@@ -44,5 +44,10 @@ assert_output(
 
 rule_with_custom_span(
     name = "target_with_custom_span",
+    target = ":long_build_library",
+)
+
+rule_without_custom_span(
+    name = "target_without_custom_span",
     target = ":long_build_library",
 )
